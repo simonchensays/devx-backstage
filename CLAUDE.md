@@ -112,10 +112,22 @@ Each sub-agent operates independently with its own:
 
 The orchestration agent at the root should delegate to the appropriate sub-agent based on the task. If a task involves Backstage application code, work in `backstage/`. If it involves AWS resources or deployment, work in `infra/`.
 
+## AWS Environment
+
+- **Account:** 127325447618 (prototypes)
+- **Region:** us-east-1
+- **AWS CLI profile:** `devx-backstage` (SSO via `https://d-90678d8a2c.awsapps.com/start`)
+- **SSO role:** AdministratorAccess
+- **ECR repository:** `127325447618.dkr.ecr.us-east-1.amazonaws.com/devx-backstage`
+
+To authenticate: `aws sso login --profile devx-backstage`
+
 ## Artifact Flow
 
 ```
-backstage/ (dev & test) → Docker image → infra/ (deploy to AWS)
+backstage/ (dev & test) → Docker image → ECR → infra/ (deploy to AWS)
 ```
 
-The Docker image is the contract between the two sub-agents. The backstage agent produces it; the infra agent consumes it.
+The Docker image is the contract between the two sub-agents. The backstage agent produces it and pushes to ECR; the infra agent pulls from ECR and deploys.
+
+**ECR image URI:** `127325447618.dkr.ecr.us-east-1.amazonaws.com/devx-backstage:latest`
