@@ -74,8 +74,8 @@ variable "db_username" {
   default     = "backstage"
 }
 
-variable "acm_certificate_arn" {
-  description = "ACM certificate ARN for HTTPS on ALB. When empty, ALB uses HTTP only (no Cognito auth)."
+variable "domain_name" {
+  description = "Domain name for Backstage (e.g. backstage.example.com). Creates Route 53 zone, ACM cert, and enables HTTPS + Cognito auth. When empty, ALB uses HTTP only."
   type        = string
   default     = ""
 }

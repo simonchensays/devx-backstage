@@ -15,8 +15,8 @@ cost_center = "devx-backstage"
 # db_name            = "backstage"
 # db_username        = "backstage"
 
-# HTTPS / Cognito auth (provide ACM cert ARN to enable)
-# acm_certificate_arn = "arn:aws:acm:us-east-1:127325447618:certificate/EXAMPLE"
+# HTTPS / Cognito auth (set domain to enable Route 53 zone + ACM cert + Cognito)
+# domain_name = "backstage.example.com"
 
 # GitHub integration (optional — set via env var or tfvars, stored in Secrets Manager)
 # github_token = ""  # Prefer: TF_VAR_github_token env var

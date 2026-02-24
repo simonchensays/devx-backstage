@@ -4,8 +4,13 @@ output "alb_dns_name" {
 }
 
 output "alb_url" {
-  description = "Backstage URL via ALB"
-  value       = local.use_https ? "https://${aws_lb.main.dns_name}" : "http://${aws_lb.main.dns_name}"
+  description = "Backstage URL"
+  value       = local.use_https ? "https://${var.domain_name}" : "http://${aws_lb.main.dns_name}"
+}
+
+output "route53_name_servers" {
+  description = "NS records to configure at your DNS provider for domain delegation"
+  value       = local.use_https ? aws_route53_zone.main[0].name_servers : []
 }
 
 output "cognito_user_pool_id" {

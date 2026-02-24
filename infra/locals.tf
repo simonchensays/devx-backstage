@@ -2,7 +2,7 @@ locals {
   name_prefix = "devx-backstage-${var.environment}"
   account_id  = data.aws_caller_identity.current.account_id
   region      = data.aws_region.current.name
-  use_https   = var.acm_certificate_arn != ""
+  use_https   = var.domain_name != ""
 
   azs = slice(data.aws_availability_zones.available.names, 0, 2)
 

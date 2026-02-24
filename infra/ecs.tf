@@ -129,7 +129,7 @@ resource "aws_ecs_service" "backstage" {
 
   health_check_grace_period_seconds = 120
 
-  depends_on = [aws_lb_listener.http]
+  depends_on = [aws_lb_listener.http_redirect, aws_lb_listener.http_forward]
 
   tags = { Name = local.name_prefix }
 }
