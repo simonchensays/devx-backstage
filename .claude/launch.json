@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "backstage-dev",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "NODE_OPTIONS='--dns-result-order=ipv4first' yarn --cwd backstage start"],
+      "port": 3000
+    },
+    {
+      "name": "backstage-backend",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["--cwd", "backstage", "workspace", "backend", "start"],
+      "port": 7007
+    },
+    {
+      "name": "backstage-frontend",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "NODE_OPTIONS='--dns-result-order=ipv4first' yarn --cwd backstage workspace app start"],
+      "port": 3000
+    }
+  ]
+}
