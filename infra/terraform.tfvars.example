@@ -1,0 +1,22 @@
+# Required variables
+owner       = "devx"
+cost_center = "devx-backstage"
+
+# Optional overrides (defaults shown)
+# environment        = "dev"
+# aws_region         = "us-east-1"
+# vpc_cidr           = "10.0.0.0/16"
+# ecr_image_uri      = "127325447618.dkr.ecr.us-east-1.amazonaws.com/devx-backstage:latest"
+# ecs_cpu            = 512
+# ecs_memory         = 1024
+# ecs_desired_count  = 1
+# rds_instance_class = "db.t4g.micro"
+# rds_allocated_storage = 20
+# db_name            = "backstage"
+# db_username        = "backstage"
+
+# HTTPS / Cognito auth (set domain to enable Route 53 zone + ACM cert + Cognito)
+# domain_name = "backstage.example.com"
+
+# GitHub integration (optional — set via env var or tfvars, stored in Secrets Manager)
+# github_token = ""  # Prefer: TF_VAR_github_token env var
