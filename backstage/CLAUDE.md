@@ -100,11 +100,36 @@ Plugins go in `plugins/` and are registered in:
 - **Frontend:** `packages/app/src/App.tsx` (routes) and `packages/app/src/components/Root/Root.tsx` (sidebar)
 - **Backend:** `packages/backend/src/index.ts` (backend plugin registration)
 
-## Building the Docker Image
+## Building and Publishing the Docker Image
 
+The Dockerfile is at `packages/backend/Dockerfile` (multi-stage build on `node:24-trixie-slim`).
+
+### Prerequisites
 ```bash
-yarn build-image
-# equivalent to: docker build ../.. -f Dockerfile --tag backstage
+yarn install --immutable
+yarn tsc
+yarn build:backend            # Must run before build-image
 ```
 
-This is the output artifact consumed by the `infra/` deployment agent.
+### Build
+```bash
+yarn build-image              # Runs: docker build ../.. -f Dockerfile --tag backstage
+```
+
+### Push to ECR
+```bash
+# Authenticate Docker to ECR (requires AWS CLI + devx-backstage profile)
+aws ecr get-login-password --region us-east-1 --profile devx-backstage \
+  | docker login --username AWS --password-stdin 127325447618.dkr.ecr.us-east-1.amazonaws.com
+
+# Tag and push
+docker tag backstage:latest 127325447618.dkr.ecr.us-east-1.amazonaws.com/devx-backstage:latest
+docker push 127325447618.dkr.ecr.us-east-1.amazonaws.com/devx-backstage:latest
+```
+
+### ECR Details
+- **Repository:** `devx-backstage`
+- **URI:** `127325447618.dkr.ecr.us-east-1.amazonaws.com/devx-backstage`
+- **Region:** us-east-1
+- **AWS Account:** 127325447618 (prototypes)
+- **AWS Profile:** `devx-backstage` (SSO via `https://d-90678d8a2c.awsapps.com/start`)
