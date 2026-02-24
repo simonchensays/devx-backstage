@@ -26,7 +26,7 @@ resource "aws_lb_target_group" "backstage" {
   target_type = "ip"
 
   health_check {
-    path                = "/healthcheck"
+    path                = "/.backstage/health/v1/readiness"
     protocol            = "HTTP"
     port                = "traffic-port"
     healthy_threshold   = 2

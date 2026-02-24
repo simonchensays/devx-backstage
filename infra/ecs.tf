@@ -37,6 +37,11 @@ resource "aws_ecs_task_definition" "backstage" {
   execution_role_arn       = aws_iam_role.ecs_execution.arn
   task_role_arn            = aws_iam_role.ecs_task.arn
 
+  runtime_platform {
+    operating_system_family = "LINUX"
+    cpu_architecture        = "ARM64"
+  }
+
   container_definitions = jsonencode([
     {
       name      = "backstage"
@@ -54,6 +59,7 @@ resource "aws_ecs_task_definition" "backstage" {
         { name = "POSTGRES_HOST", value = aws_db_instance.main.address },
         { name = "POSTGRES_PORT", value = tostring(aws_db_instance.main.port) },
         { name = "POSTGRES_USER", value = var.db_username },
+        { name = "PGSSLMODE", value = "require" },
       ]
 
       secrets = concat(
@@ -85,11 +91,11 @@ resource "aws_ecs_task_definition" "backstage" {
       }
 
       healthCheck = {
-        command     = ["CMD-SHELL", "node -e \"require('http').get('http://localhost:7007/healthcheck', (r) => process.exit(r.statusCode === 200 ? 0 : 1))\""]
+        command     = ["CMD-SHELL", "node -e \"require('http').get('http://localhost:7007/.backstage/health/v1/readiness', (r) => process.exit(r.statusCode === 200 ? 0 : 1))\""]
         interval    = 30
         timeout     = 5
         retries     = 3
-        startPeriod = 60
+        startPeriod = 120
       }
     }
   ])
