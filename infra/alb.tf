@@ -58,7 +58,7 @@ resource "aws_lb_listener" "https" {
 
     authenticate_cognito {
       user_pool_arn       = aws_cognito_user_pool.main.arn
-      user_pool_client_id = aws_cognito_user_pool_client.alb.id
+      user_pool_client_id = aws_cognito_user_pool_client.alb[0].id
       user_pool_domain    = aws_cognito_user_pool_domain.main.domain
       session_cookie_name = "AWSELBAuthSessionCookie"
       session_timeout     = 3600

@@ -54,9 +54,12 @@ resource "aws_cognito_user_pool_domain" "main" {
 
 ################################################################################
 # Cognito User Pool Client (for ALB integration)
+# Only created when HTTPS is enabled — Cognito requires HTTPS callback URLs
 ################################################################################
 
 resource "aws_cognito_user_pool_client" "alb" {
+  count = local.use_https ? 1 : 0
+
   name         = "${local.name_prefix}-alb"
   user_pool_id = aws_cognito_user_pool.main.id
 
@@ -67,9 +70,5 @@ resource "aws_cognito_user_pool_client" "alb" {
   allowed_oauth_flows_user_pool_client = true
   supported_identity_providers         = ["COGNITO"]
 
-  callback_urls = local.use_https ? [
-    "https://${aws_lb.main.dns_name}/oauth2/idpresponse"
-    ] : [
-    "http://${aws_lb.main.dns_name}/oauth2/idpresponse"
-  ]
+  callback_urls = ["https://${aws_lb.main.dns_name}/oauth2/idpresponse"]
 }
