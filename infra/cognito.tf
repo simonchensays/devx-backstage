@@ -70,7 +70,7 @@ resource "aws_cognito_user_pool_client" "alb" {
   generate_secret = true
 
   allowed_oauth_flows                  = ["code"]
-  allowed_oauth_scopes                 = ["openid"]
+  allowed_oauth_scopes                 = ["openid", "email", "profile"]
   allowed_oauth_flows_user_pool_client = true
   supported_identity_providers         = ["COGNITO"]
 

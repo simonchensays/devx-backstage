@@ -27,6 +27,13 @@ backend:
 auth:
   providers:
     guest: {}
+    awsalb:
+      issuer: https://cognito-idp.us-east-1.amazonaws.com/${COGNITO_USER_POOL_ID}
+      region: us-east-1
+      signIn:
+        resolvers:
+          - resolver: emailMatchingUserEntityProfileEmail
+            dangerouslyAllowSignInWithoutUserInCatalog: true
 
 catalog:
   # Overrides the default list locations from app-config.yaml as these contain example data.

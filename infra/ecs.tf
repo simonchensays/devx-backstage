@@ -60,6 +60,7 @@ resource "aws_ecs_task_definition" "backstage" {
         { name = "POSTGRES_PORT", value = tostring(aws_db_instance.main.port) },
         { name = "POSTGRES_USER", value = var.db_username },
         { name = "PGSSLMODE", value = "require" },
+        { name = "COGNITO_USER_POOL_ID", value = aws_cognito_user_pool.main.id },
       ]
 
       secrets = concat(
