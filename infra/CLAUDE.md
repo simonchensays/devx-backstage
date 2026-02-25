@@ -6,11 +6,12 @@ This directory contains Terraform infrastructure-as-code for deploying Backstage
 
 ## Architecture
 
-- **ECS Fargate** in private subnets (no direct internet access)
+- **ECS Fargate** in private subnets with internet access via NAT Gateway
 - **ALB** in public subnets with Cognito authentication (when HTTPS enabled)
 - **RDS PostgreSQL** in isolated DB subnets
 - **S3** for TechDocs static assets
-- **VPC Endpoints** instead of NAT Gateway for AWS service access
+- **NAT Gateway** (single AZ) for ECS tasks to reach public endpoints (ALB JWT key verification, GitHub API)
+- **VPC Endpoints** for AWS service access (ECR, S3, Logs, SM, STS)
 - **Secrets Manager** for all credentials
 - **CloudTrail + VPC Flow Logs** for SOC2 baseline
 
@@ -24,8 +25,23 @@ Cognito is integrated at the **ALB level**, not in the Backstage app itself. Una
 - **Cognito client** is conditional on HTTPS (`count = local.use_https ? 1 : 0`)
 - **HTTPS listener (443):** authenticates via Cognito → forwards to ECS target group
 - **HTTP listener (80):** redirects to HTTPS when domain is set; forwards directly otherwise
+- **OAuth scopes:** `openid`, `email`, `profile` (email and profile required by ALB auth provider)
 - **Session timeout:** 1 hour
 - **Output:** `cognito_login_url` provides the hosted UI login URL
+
+### Backstage-side integration
+The Backstage app uses `@backstage/plugin-auth-backend-module-aws-alb-provider` to consume the `x-amzn-oidc-*` headers injected by the ALB after Cognito auth. The `COGNITO_USER_POOL_ID` env var is passed from the ECS task definition for the provider's issuer URL. See `backstage/CLAUDE.md` for app-level details.
+
+## Networking
+
+- **Public subnets:** ALB, NAT Gateway, Internet Gateway
+- **Private subnets:** ECS Fargate tasks — outbound internet via NAT Gateway (single AZ, sufficient for dev)
+- **DB subnets:** RDS PostgreSQL — fully isolated, no internet route
+- **Security groups follow default-deny:**
+  - **ALB SG:** ingress 80/443 from internet; egress 7007 to ECS, 443 to internet (Cognito token exchange)
+  - **ECS SG:** ingress 7007 from ALB; egress 5432 to RDS, 443 to VPC endpoints, 443 to S3 prefix list, 443 to internet via NAT (ALB JWT key verification, GitHub API)
+  - **RDS SG:** ingress 5432 from ECS only
+  - **VPC Endpoints SG:** ingress 443 from ECS only
 
 ## Deployment Details
 
@@ -78,7 +94,7 @@ terraform validate
 | `variables.tf` | Input variables |
 | `locals.tf` | Computed values, naming, subnet CIDRs |
 | `data.tf` | Data sources |
-| `vpc.tf` | VPC, subnets, route tables, IGW |
+| `vpc.tf` | VPC, subnets, route tables, IGW, NAT Gateway |
 | `endpoints.tf` | VPC endpoints (ECR, S3, Logs, SM, STS) |
 | `security_groups.tf` | Security groups |
 | `alb.tf` | ALB, listeners, target group |
