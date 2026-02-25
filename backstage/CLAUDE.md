@@ -82,7 +82,7 @@ Example entities are loaded from `examples/` directory. Catalog locations are de
 
 `app-config.yaml` is the primary config file. Key sections:
 - `app` — frontend base URL, title
-- `backend` — API base URL, listen port, CORS, CSP, database
+- `backend` — API base URL, listen port, CORS, CSP, database, logging level (warn)
 - `auth` — authentication providers
 - `catalog` — entity sources and import rules
 - `integrations` — GitHub PAT via `${GITHUB_TOKEN}` env var
