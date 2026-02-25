@@ -28,6 +28,7 @@ import { Root } from './components/Root';
 import {
   AlertDisplay,
   OAuthRequestDialog,
+  ProxiedSignInPage,
   SignInPage,
 } from '@backstage/core-components';
 import { createApp } from '@backstage/app-defaults';
@@ -58,7 +59,12 @@ const app = createApp({
     });
   },
   components: {
-    SignInPage: props => <SignInPage {...props} auto providers={['guest']} />,
+    SignInPage: props =>
+      process.env.NODE_ENV === 'production' ? (
+        <ProxiedSignInPage {...props} provider="awsalb" />
+      ) : (
+        <SignInPage {...props} auto providers={['guest']} />
+      ),
   },
 });
 

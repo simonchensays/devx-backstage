@@ -44,6 +44,16 @@ resource "aws_security_group_rule" "alb_egress_ecs" {
   description              = "Forward traffic to Backstage containers"
 }
 
+resource "aws_security_group_rule" "alb_egress_https" {
+  security_group_id = aws_security_group.alb.id
+  type              = "egress"
+  protocol          = "tcp"
+  from_port         = 443
+  to_port           = 443
+  cidr_blocks       = ["0.0.0.0/0"]
+  description       = "HTTPS to internet (Cognito token exchange)"
+}
+
 ################################################################################
 # ECS Security Group
 ################################################################################
@@ -98,6 +108,16 @@ resource "aws_security_group_rule" "ecs_egress_s3" {
   to_port           = 443
   prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
   description       = "Reach S3 gateway endpoint"
+}
+
+resource "aws_security_group_rule" "ecs_egress_internet" {
+  security_group_id = aws_security_group.ecs.id
+  type              = "egress"
+  protocol          = "tcp"
+  from_port         = 443
+  to_port           = 443
+  cidr_blocks       = ["0.0.0.0/0"]
+  description       = "HTTPS to internet via NAT (ALB JWT key verification, GitHub API)"
 }
 
 ################################################################################

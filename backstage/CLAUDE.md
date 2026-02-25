@@ -55,6 +55,7 @@ yarn build:backend            # Build backend only
 yarn build-image              # Build production Docker image
 yarn new                      # Scaffold new plugin or package
 yarn clean                    # Clean build artifacts
+yarn test:smoke               # Smoke test against deployed Backstage (needs .env)
 ```
 
 ## Local Development
@@ -72,11 +73,43 @@ NODE_OPTIONS='--dns-result-order=ipv4first' yarn start
 ### Authentication
 Guest auth is enabled by default (`auth.providers.guest: {}` in app-config.yaml). No setup needed for local dev.
 
+**Production** uses ALB + Cognito authentication (see `infra/CLAUDE.md` for the infra side):
+- `@backstage/plugin-auth-backend-module-aws-alb-provider` registered in `packages/backend/src/index.ts`
+- `ProxiedSignInPage` with provider `awsalb` rendered in production (`packages/app/src/App.tsx`)
+- `app-config.production.yaml` configures the `awsalb` provider with Cognito issuer URL and `emailMatchingUserEntityProfileEmail` resolver
+- ALB injects `x-amzn-oidc-*` headers after Cognito auth; the provider verifies the JWT and extracts user identity
+- `COGNITO_USER_POOL_ID` env var is passed from the ECS task definition to construct the issuer URL
+
 ### Database
 Local dev uses in-memory SQLite (`better-sqlite3`). Production uses PostgreSQL (configured in `app-config.production.yaml`) with SSL required (`ssl.rejectUnauthorized: false` + `PGSSLMODE=require`).
 
 ### Catalog
 Example entities are loaded from `examples/` directory. Catalog locations are defined in `app-config.yaml` under `catalog.locations`.
+
+## Smoke Tests
+
+End-to-end smoke tests verify the deployed Backstage instance works with Cognito authentication.
+
+### Setup
+Create a `.env` file (gitignored) in the `backstage/` directory:
+```
+COGNITO_USERNAME=<your-cognito-username>
+COGNITO_PASSWORD=<your-cognito-password>
+```
+
+### Running
+```bash
+yarn test:smoke               # Runs Playwright against https://backstage.kenobiworks.com
+SMOKE_TEST_URL=https://other.example.com yarn test:smoke  # Override target URL
+```
+
+### Details
+- Config: `playwright.smoke.config.ts` (separate from e2e tests)
+- Tests: `smoke-tests/login.test.ts`
+- Artifacts: screenshots, traces, and videos saved to `smoke-test-results/` (gitignored)
+- Report: `smoke-test-report/` (gitignored)
+- Tests skip gracefully when `COGNITO_USERNAME`/`COGNITO_PASSWORD` are not set
+- Uses `:visible` selectors to handle Cognito hosted UI's duplicate mobile/desktop forms
 
 ## Configuration
 

@@ -54,6 +54,27 @@ resource "aws_route_table_association" "public" {
 }
 
 ################################################################################
+# NAT Gateway (single AZ — sufficient for dev)
+# Required so ECS tasks can reach public AWS endpoints such as the ALB JWT
+# public-key service (public-keys.auth.elb.<region>.amazonaws.com).
+################################################################################
+
+resource "aws_eip" "nat" {
+  domain = "vpc"
+
+  tags = { Name = "${local.name_prefix}-nat" }
+}
+
+resource "aws_nat_gateway" "main" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[0].id
+
+  tags = { Name = local.name_prefix }
+
+  depends_on = [aws_internet_gateway.main]
+}
+
+################################################################################
 # Private Subnets (ECS Fargate)
 ################################################################################
 
@@ -70,6 +91,11 @@ resource "aws_subnet" "private" {
 
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.main.id
+  }
 
   tags = { Name = "${local.name_prefix}-private" }
 }
