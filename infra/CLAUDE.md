@@ -27,6 +27,12 @@ Cognito is integrated at the **ALB level**, not in the Backstage app itself. Una
 - **Session timeout:** 1 hour
 - **Output:** `cognito_login_url` provides the hosted UI login URL
 
+## Deployment Details
+
+- **Platform:** ARM64 (Docker image built on Apple Silicon)
+- **Health check:** `/.backstage/health/v1/readiness` with 120s `startPeriod` for cold starts
+- **DB SSL:** `PGSSLMODE=require` env var injected into ECS task; `app-config.production.yaml` sets `ssl.rejectUnauthorized: false`
+
 ## Key Commands
 
 ```bash
@@ -86,3 +92,7 @@ terraform validate
 | `logs.tf` | CloudTrail, VPC Flow Logs |
 | `outputs.tf` | Output values |
 | `bootstrap/main.tf` | One-time state backend setup |
+
+## Skills
+
+- **`/infra-apply`** — plans and applies Terraform changes. Pass `plan` argument for dry-run only. Defined in `.claude/skills/infra-apply/SKILL.md`.

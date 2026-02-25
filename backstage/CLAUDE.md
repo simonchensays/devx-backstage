@@ -73,7 +73,7 @@ NODE_OPTIONS='--dns-result-order=ipv4first' yarn start
 Guest auth is enabled by default (`auth.providers.guest: {}` in app-config.yaml). No setup needed for local dev.
 
 ### Database
-Local dev uses in-memory SQLite (`better-sqlite3`). Production uses PostgreSQL (configured in `app-config.production.yaml`).
+Local dev uses in-memory SQLite (`better-sqlite3`). Production uses PostgreSQL (configured in `app-config.production.yaml`) with SSL required (`ssl.rejectUnauthorized: false` + `PGSSLMODE=require`).
 
 ### Catalog
 Example entities are loaded from `examples/` directory. Catalog locations are defined in `app-config.yaml` under `catalog.locations`.
