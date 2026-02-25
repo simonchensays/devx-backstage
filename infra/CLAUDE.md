@@ -51,6 +51,13 @@ The Backstage app uses `@backstage/plugin-auth-backend-module-aws-alb-provider` 
 
 ## Key Commands
 
+**Preferred: use the `/infra-apply` skill** for plan and apply operations — it handles init, fmt, validate, plan, and apply in one step:
+```bash
+/infra-apply                 # Full plan + apply workflow
+/infra-apply plan            # Plan only (dry-run)
+```
+
+Manual commands (reference):
 ```bash
 # First-time setup: create state backend
 cd bootstrap && terraform init && terraform apply
@@ -112,3 +119,4 @@ terraform validate
 ## Skills
 
 - **`/infra-apply`** — plans and applies Terraform changes. Pass `plan` argument for dry-run only. Defined in `.claude/skills/infra-apply/SKILL.md`.
+- **`/build-and-push`** — builds the Backstage Docker image and pushes to ECR (run from `backstage/`). Use before `/infra-apply` when deploying app changes. Defined in `.claude/skills/build-and-push/SKILL.md`.

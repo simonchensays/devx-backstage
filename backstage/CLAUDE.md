@@ -135,21 +135,31 @@ Plugins go in `plugins/` and are registered in:
 
 ## Building and Publishing the Docker Image
 
+**Preferred: use the `/build-and-push` skill**, which handles the full build → ECR push pipeline in one step:
+```bash
+/build-and-push              # Build and push with tag "latest"
+/build-and-push v1.2.3       # Build and push with custom tag
+```
+
+After pushing, use `/infra-apply` (from the `infra/` agent) to deploy the new image to ECS.
+
+### Manual Steps (reference)
+
 The Dockerfile is at `packages/backend/Dockerfile` (multi-stage build on `node:24-trixie-slim`).
 
-### Prerequisites
+#### Prerequisites
 ```bash
 yarn install --immutable
 yarn tsc
 yarn build:backend            # Must run before build-image
 ```
 
-### Build
+#### Build
 ```bash
 yarn build-image              # Runs: docker build ../.. -f Dockerfile --tag backstage
 ```
 
-### Push to ECR
+#### Push to ECR
 ```bash
 # Authenticate Docker to ECR (requires AWS CLI + devx-backstage profile)
 aws ecr get-login-password --region us-east-1 --profile devx-backstage \
@@ -166,3 +176,8 @@ docker push 127325447618.dkr.ecr.us-east-1.amazonaws.com/devx-backstage:latest
 - **Region:** us-east-1
 - **AWS Account:** 127325447618 (prototypes)
 - **AWS Profile:** `devx-backstage` (SSO via `https://d-90678d8a2c.awsapps.com/start`)
+
+## Skills
+
+- **`/build-and-push`** — builds the Backstage Docker image and pushes to ECR. Accepts optional `[tag]` argument (default: `latest`). Defined in `.claude/skills/build-and-push/SKILL.md`.
+- **`/infra-apply`** — plans and applies infrastructure changes (run from `infra/`). Use after pushing a new image to deploy it. Defined in `.claude/skills/infra-apply/SKILL.md`.
