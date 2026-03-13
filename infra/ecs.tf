@@ -61,6 +61,10 @@ resource "aws_ecs_task_definition" "backstage" {
         { name = "POSTGRES_USER", value = var.db_username },
         { name = "PGSSLMODE", value = "require" },
         { name = "COGNITO_USER_POOL_ID", value = aws_cognito_user_pool.main.id },
+        { name = "COGNITO_DOMAIN", value = aws_cognito_user_pool_domain.main.domain },
+        { name = "COGNITO_CLIENT_ID", value = local.use_https ? aws_cognito_user_pool_client.alb[0].id : "" },
+        { name = "COGNITO_REGION", value = var.aws_region },
+        { name = "APP_DOMAIN", value = var.domain_name },
       ]
 
       secrets = concat(

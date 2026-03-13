@@ -67,4 +67,9 @@ backend.add(import('@backstage/plugin-kubernetes-backend'));
 backend.add(import('@backstage/plugin-notifications-backend'));
 backend.add(import('@backstage/plugin-signals-backend'));
 
+// Cognito logout — clears ALB session cookies server-side and redirects to
+// Cognito /logout endpoint. Only active when COGNITO_DOMAIN, COGNITO_CLIENT_ID,
+// and APP_DOMAIN env vars are set (production).
+backend.add(import('./modules/cognitoLogout'));
+
 backend.start();
