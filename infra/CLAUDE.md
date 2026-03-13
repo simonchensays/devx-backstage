@@ -32,6 +32,16 @@ Cognito is integrated at the **ALB level**, not in the Backstage app itself. Una
 ### Backstage-side integration
 The Backstage app uses `@backstage/plugin-auth-backend-module-aws-alb-provider` to consume the `x-amzn-oidc-*` headers injected by the ALB after Cognito auth. The `COGNITO_USER_POOL_ID` env var is passed from the ECS task definition for the provider's issuer URL. See `backstage/CLAUDE.md` for app-level details.
 
+### Logout
+Full logout requires clearing ALB session cookies, which are `HttpOnly` and cannot be cleared via JavaScript. The flow:
+1. ALB listener rule (priority 1) forwards `/oauth2/sign_out` to the backend **without** `authenticate-cognito` action
+2. Backstage backend expires `AWSELBAuthSessionCookie-*` cookies via `Set-Cookie` headers and redirects to Cognito `/logout`
+3. Cognito clears its session and redirects to `logout_uri` (the app domain)
+4. ALB sees no session cookie → triggers Cognito login
+
+ECS env vars for logout: `COGNITO_DOMAIN`, `COGNITO_CLIENT_ID`, `COGNITO_REGION`, `APP_DOMAIN` (all set in `ecs.tf`)
+Cognito client `logout_urls` configured in `cognito.tf`
+
 ## Networking
 
 - **Public subnets:** ALB, NAT Gateway, Internet Gateway

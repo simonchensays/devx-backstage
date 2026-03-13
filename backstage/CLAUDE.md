@@ -80,6 +80,15 @@ Guest auth is enabled by default (`auth.providers.guest: {}` in app-config.yaml)
 - ALB injects `x-amzn-oidc-*` headers after Cognito auth; the provider verifies the JWT and extracts user identity
 - `COGNITO_USER_POOL_ID` env var is passed from the ECS task definition to construct the issuer URL
 
+**Logout** uses a three-layer flow to fully clear all sessions:
+1. Frontend capture-phase click handler on `[data-testid="sign-out"]` redirects to `/oauth2/sign_out` (`packages/app/src/components/Root/Root.tsx`)
+2. Backend `cognitoLogout` module (`packages/backend/src/modules/cognitoLogout.ts`) expires ALB `HttpOnly` session cookies via `Set-Cookie` headers and redirects to Cognito `/logout` endpoint
+3. Cognito clears its session and redirects back to the app → ALB triggers re-authentication
+
+**Important:** ALB session cookies (`AWSELBAuthSessionCookie-*`) are `HttpOnly` — they cannot be cleared via JavaScript. Cookie clearing must happen server-side via response headers.
+
+Required ECS env vars for logout: `COGNITO_DOMAIN`, `COGNITO_CLIENT_ID`, `COGNITO_REGION`, `APP_DOMAIN`
+
 ### Database
 Local dev uses in-memory SQLite (`better-sqlite3`). Production uses PostgreSQL (configured in `app-config.production.yaml`) with SSL required (`ssl.rejectUnauthorized: false` + `PGSSLMODE=require`).
 
