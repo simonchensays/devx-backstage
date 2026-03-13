@@ -75,4 +75,5 @@ resource "aws_cognito_user_pool_client" "alb" {
   supported_identity_providers         = ["COGNITO"]
 
   callback_urls = ["https://${var.domain_name}/oauth2/idpresponse"]
+  logout_urls   = ["https://${var.domain_name}"]
 }

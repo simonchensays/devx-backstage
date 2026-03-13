@@ -77,6 +77,30 @@ resource "aws_lb_listener" "https" {
 }
 
 ################################################################################
+# Logout — clear ALB session cookies and redirect to Cognito logout
+# This rule has no authenticate-cognito action, so it bypasses auth.
+################################################################################
+
+resource "aws_lb_listener_rule" "logout" {
+  count        = local.use_https ? 1 : 0
+  listener_arn = aws_lb_listener.https[0].arn
+  priority     = 1
+
+  condition {
+    path_pattern {
+      values = ["/oauth2/sign_out"]
+    }
+  }
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.backstage.arn
+  }
+
+  tags = { Name = "${local.name_prefix}-logout" }
+}
+
+################################################################################
 # HTTP Listener
 # - With HTTPS: redirect HTTP → HTTPS
 # - Without HTTPS: forward directly (dev bootstrapping only, no Cognito auth)

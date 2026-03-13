@@ -1,4 +1,4 @@
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core';
 import HomeIcon from '@material-ui/icons/Home';
 import ExtensionIcon from '@material-ui/icons/Extension';
@@ -57,7 +57,39 @@ const SidebarLogo = () => {
   );
 };
 
-export const Root = ({ children }: PropsWithChildren<{}>) => (
+/**
+ * Intercept clicks on the Sign Out menu item and redirect to the ALB logout
+ * endpoint instead. The endpoint clears ALB session cookies and ends the
+ * Cognito session. Without this, sign-out only clears the Backstage session
+ * and the ALB cookie silently re-authenticates.
+ *
+ * Uses a capture-phase click listener on the document to fire before
+ * Backstage's own handler. Targets the stable data-testid="sign-out"
+ * attribute on the menu item.
+ */
+function useSignOutRedirect() {
+  useEffect(() => {
+    if (typeof window === 'undefined' || window.location.protocol !== 'https:') {
+      return undefined;
+    }
+
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-testid="sign-out"]')) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        window.location.href = '/oauth2/sign_out';
+      }
+    };
+
+    document.addEventListener('click', handler, true);
+    return () => document.removeEventListener('click', handler, true);
+  }, []);
+}
+
+export const Root = ({ children }: PropsWithChildren<{}>) => {
+  useSignOutRedirect();
+  return (
   <SidebarPage>
     <Sidebar>
       <SidebarLogo />
@@ -96,4 +128,5 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
     </Sidebar>
     {children}
   </SidebarPage>
-);
+  );
+};

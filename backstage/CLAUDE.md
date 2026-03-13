@@ -80,6 +80,15 @@ Guest auth is enabled by default (`auth.providers.guest: {}` in app-config.yaml)
 - ALB injects `x-amzn-oidc-*` headers after Cognito auth; the provider verifies the JWT and extracts user identity
 - `COGNITO_USER_POOL_ID` env var is passed from the ECS task definition to construct the issuer URL
 
+**Logout** uses a three-layer flow to fully clear all sessions:
+1. Frontend capture-phase click handler on `[data-testid="sign-out"]` redirects to `/oauth2/sign_out` (`packages/app/src/components/Root/Root.tsx`)
+2. Backend `cognitoLogout` module (`packages/backend/src/modules/cognitoLogout.ts`) expires ALB `HttpOnly` session cookies via `Set-Cookie` headers and redirects to Cognito `/logout` endpoint
+3. Cognito clears its session and redirects back to the app → ALB triggers re-authentication
+
+**Important:** ALB session cookies (`AWSELBAuthSessionCookie-*`) are `HttpOnly` — they cannot be cleared via JavaScript. Cookie clearing must happen server-side via response headers.
+
+Required ECS env vars for logout: `COGNITO_DOMAIN`, `COGNITO_CLIENT_ID`, `COGNITO_REGION`, `APP_DOMAIN`
+
 ### Database
 Local dev uses in-memory SQLite (`better-sqlite3`). Production uses PostgreSQL (configured in `app-config.production.yaml`) with SSL required (`ssl.rejectUnauthorized: false` + `PGSSLMODE=require`).
 
@@ -135,21 +144,31 @@ Plugins go in `plugins/` and are registered in:
 
 ## Building and Publishing the Docker Image
 
+**Preferred: use the `/build-and-push` skill**, which handles the full build → ECR push pipeline in one step:
+```bash
+/build-and-push              # Build and push with tag "latest"
+/build-and-push v1.2.3       # Build and push with custom tag
+```
+
+After pushing, use `/infra-apply` (from the `infra/` agent) to deploy the new image to ECS.
+
+### Manual Steps (reference)
+
 The Dockerfile is at `packages/backend/Dockerfile` (multi-stage build on `node:24-trixie-slim`).
 
-### Prerequisites
+#### Prerequisites
 ```bash
 yarn install --immutable
 yarn tsc
 yarn build:backend            # Must run before build-image
 ```
 
-### Build
+#### Build
 ```bash
 yarn build-image              # Runs: docker build ../.. -f Dockerfile --tag backstage
 ```
 
-### Push to ECR
+#### Push to ECR
 ```bash
 # Authenticate Docker to ECR (requires AWS CLI + devx-backstage profile)
 aws ecr get-login-password --region us-east-1 --profile devx-backstage \
@@ -166,3 +185,8 @@ docker push 127325447618.dkr.ecr.us-east-1.amazonaws.com/devx-backstage:latest
 - **Region:** us-east-1
 - **AWS Account:** 127325447618 (prototypes)
 - **AWS Profile:** `devx-backstage` (SSO via `https://d-90678d8a2c.awsapps.com/start`)
+
+## Skills
+
+- **`/build-and-push`** — builds the Backstage Docker image and pushes to ECR. Accepts optional `[tag]` argument (default: `latest`). Defined in `.claude/skills/build-and-push/SKILL.md`.
+- **`/infra-apply`** — plans and applies infrastructure changes (run from `infra/`). Use after pushing a new image to deploy it. Defined in `.claude/skills/infra-apply/SKILL.md`.
